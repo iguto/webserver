@@ -1,6 +1,7 @@
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::{Read, Write};
+use std::path::Path;
 
 #[derive(Debug)]
 pub enum Method {
@@ -29,30 +30,31 @@ fn handle_client(mut stream: TcpStream) {
     stream.read_to_string(&mut s)
         .expect("could not read from stream");
     println!("{:?} : {}", stream, s);
-    let request_line = RequestLine::new(s);
+    let request_line = RequestLine::new(&s);
     println!("request line: {:?}", request_line);
+
 }
 
 // represents HTTP request line.
 #[derive(Debug)]
-pub struct RequestLine {
+pub struct RequestLine<'a> {
     pub method: Method,
-    pub location: String
+    pub location: &'a Path
 }
 
-impl RequestLine {
-    fn new(request_line: String) -> RequestLine {
-        let (method, location) = RequestLine::parse_request_line(request_line);
-        println!("method: {:?}, location: {}", method, location);
+impl<'a> RequestLine<'a> {
+    fn new(raw_request_line: &'a str) -> RequestLine<'a> {
+        let (method, location) = RequestLine::parse_request_line(&raw_request_line);
+        println!("method: {:?}, location: {:?}", method, location);
         RequestLine { method: method, location: location }
     }
 
-    fn parse_request_line(request_line: String) -> (Method, String) {
-        let words: Vec<&str> = request_line.split(" ").collect();
+    fn parse_request_line(raw_request_line: &'a str) -> (Method, &'a Path) {
+        let words: Vec<&str> = raw_request_line.split(" ").collect();
         let method = RequestLine::detect_method(&words[0])
             .expect("invalid HTTP method");
        println!("w0 : {}  w1: {}", words[0], words[1]);
-       (method, words[1].to_owned())
+       (method, Path::new(words[1]))
     }
 
     fn detect_method(target: &str) -> Option<Method> {
@@ -62,3 +64,4 @@ impl RequestLine {
         return None;
     }
 }
+// ~/tmp/webserver_document
