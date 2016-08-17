@@ -38,18 +38,7 @@ fn handle_client(mut stream: TcpStream) {
     println!("request line: {:?}", request_line);
     let request_handler = RequestHandler::new(request_line);
 
-    let location = request_handler.file_path(DOCUMENT_ROOT);
-
-    println!("real location: {:?}", location);
-    if !location.exists() {
-        println!("not found");
-        return;
-    }
-    if !location.is_file() {
-        println!("location should be a path for file which exists.");
-        return;
-    }
-    let mut file = File::open(location).expect("could not open file");
+    let mut file = request_handler.file(DOCUMENT_ROOT).expect("could not find the file");
     println!("file: {:?}", file);
     let mut content = String::new();
     file.read_to_string(&mut content)
@@ -67,6 +56,17 @@ pub struct RequestHandler {
 impl RequestHandler {
     fn new(request_line: RequestLine) -> RequestHandler {
         RequestHandler { request_line: request_line }
+    }
+
+    fn file(&self, root: &str) -> Result<File, &'static str> {
+        let path = self.file_path(root);
+        if !path.exists() {
+            Err("not found")
+        } else if !path.is_file() {
+            Err("location should be a path for file which exists.")
+        } else {
+            Ok(File::open(path).expect("could not open file"))
+        }
     }
 
     fn file_path(&self, root: &str) -> PathBuf {
