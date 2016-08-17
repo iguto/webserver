@@ -1,7 +1,8 @@
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
 use std::fs::File;
 
 const DOCUMENT_ROOT: &'static str = "/Users/iguto/tmp/webserver_document";
@@ -35,16 +36,9 @@ fn handle_client(mut stream: TcpStream) {
     println!("{:?} : {}", stream, s);
     let request_line = RequestLine::new(&s);
     println!("request line: {:?}", request_line);
-    let doc_root = Path::new(DOCUMENT_ROOT);
+    let request_handler = RequestHandler::new(request_line);
 
-    let subpath = if request_line.location.starts_with("/") {
-        let mut new_path = request_line.location.to_owned();
-        new_path.remove(0);
-        new_path
-    } else {
-        request_line.location
-    };
-    let location = doc_root.join(subpath);
+    let location = request_handler.file_path(DOCUMENT_ROOT);
 
     println!("real location: {:?}", location);
     if !location.exists() {
@@ -64,6 +58,28 @@ fn handle_client(mut stream: TcpStream) {
 
     stream.write(content.as_bytes())
         .expect("could not write to stream");
+}
+
+pub struct RequestHandler {
+    pub request_line: RequestLine,
+}
+
+impl RequestHandler {
+    fn new(request_line: RequestLine) -> RequestHandler {
+        RequestHandler { request_line: request_line }
+    }
+
+    fn file_path(&self, root: &str) -> PathBuf {
+        let path = if self.request_line.location.starts_with("/") {
+            let mut new_path = self.request_line.location.to_owned();
+            new_path.remove(0);
+            new_path
+        } else {
+            self.request_line.location.to_owned()
+        };
+        let doc_root = Path::new(&root).to_owned();
+        doc_root.join(path).to_owned()
+    }
 }
 
 // represents HTTP request line.
