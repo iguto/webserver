@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::fs::File;
 
-const DOCUMENT_ROOT: &'static str = "~/tmp/webserver_document";
+const DOCUMENT_ROOT: &'static str = "/Users/iguto/tmp/webserver_document";
 
 #[derive(Debug)]
 pub enum Method {
@@ -37,7 +37,6 @@ fn handle_client(mut stream: TcpStream) {
     println!("request line: {:?}", request_line);
     let doc_root = Path::new(DOCUMENT_ROOT);
 
-
     let result = request_line.location.starts_with("/");
     println!("result: {}", result);
     let subpath = if result {
@@ -53,8 +52,12 @@ fn handle_client(mut stream: TcpStream) {
     if !location.is_file() {
         println!("location should be a path for file which exists.");
     } else {
-        let file = File::open(location).expect("could not open file");
+        let mut file = File::open(location).expect("could not open file");
         println!("file: {:?}", file);
+        let mut content = String::new();
+        file.read_to_string(&mut content)
+            .expect("could not read from file");
+        println!("file content: \n{}", content);
     }
 }
 
@@ -90,4 +93,3 @@ impl RequestLine {
         return None;
     }
 }
-// ~/tmp/webserver_document
