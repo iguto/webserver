@@ -2,8 +2,8 @@ use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-
 use std::fs::File;
+use std::str;
 
 const DOCUMENT_ROOT: &'static str = "/Users/iguto/tmp/webserver_document";
 const NOT_FOUND_HTML: &'static str = r#"
@@ -15,6 +15,7 @@ const NOT_FOUND_HTML: &'static str = r#"
 <h1>Not Found</h1>
 </body>
 "#;
+const BUFF_SIZE: usize = 128;
 
 #[derive(Debug)]
 pub enum Method {
@@ -38,10 +39,29 @@ fn main() {
 }
 
 fn handle_client(mut stream: TcpStream) {
+    let mut buf: [u8; BUFF_SIZE] = [0; BUFF_SIZE];
     let mut s = String::new();
+    let newline: u8 = '\n' as u8;
     println!("handle: {:?}", stream);
-    stream.read_to_string(&mut s)
-        .expect("could not read from stream");
+    loop {
+        match stream.read(&mut buf) {
+            Err(_) => {
+                println!("could not read from stream");
+                return;
+            }
+            Ok(0) => break,
+            Ok(n) if n > 0 => {
+                match buf.iter().position(|&e| e == newline) {
+                    Some(index) => {
+                        s.push_str(str::from_utf8(&buf[0..index]).expect("invalid data as utf8"));
+                        break;
+                    }
+                    None => s.push_str(str::from_utf8(&buf[0..n]).expect("invalid data as utf8")),
+                }
+            }
+            Ok(_) => unreachable!(),
+        }
+    }
     println!("{:?} : {}", stream, s);
     let request_line = RequestLine::new(&s);
     println!("request line: {:?}", request_line);
