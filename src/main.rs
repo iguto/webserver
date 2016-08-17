@@ -37,9 +37,7 @@ fn handle_client(mut stream: TcpStream) {
     println!("request line: {:?}", request_line);
     let doc_root = Path::new(DOCUMENT_ROOT);
 
-    let result = request_line.location.starts_with("/");
-    println!("result: {}", result);
-    let subpath = if result {
+    let subpath = if request_line.location.starts_with("/") {
         let mut new_path = request_line.location.to_owned();
         new_path.remove(0);
         new_path
