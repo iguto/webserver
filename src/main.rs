@@ -6,6 +6,15 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 
 const DOCUMENT_ROOT: &'static str = "/Users/iguto/tmp/webserver_document";
+const NOT_FOUND_HTML: &'static str = r#"
+<html>
+<head>
+    <title>Not Found</title>
+</head>
+<body>
+<h1>Not Found</h1>
+</body>
+"#;
 
 #[derive(Debug)]
 pub enum Method {
@@ -38,15 +47,14 @@ fn handle_client(mut stream: TcpStream) {
     println!("request line: {:?}", request_line);
     let request_handler = RequestHandler::new(request_line);
 
-    let mut file = request_handler.file(DOCUMENT_ROOT).expect("could not find the file");
-    println!("file: {:?}", file);
-    let mut content = String::new();
-    file.read_to_string(&mut content)
-        .expect("could not read from file");
-    println!("file content: \n{}", content);
-
+    let content = request_handler.response(DOCUMENT_ROOT);
     stream.write(content.as_bytes())
         .expect("could not write to stream");
+}
+
+enum RequestError {
+    NotFound,
+    Forbidden,
 }
 
 pub struct RequestHandler {
@@ -58,14 +66,29 @@ impl RequestHandler {
         RequestHandler { request_line: request_line }
     }
 
-    fn file(&self, root: &str) -> Result<File, &'static str> {
+    fn response(&self, root: &str) -> String {
+        let mut file = match self.file(root) {
+            Err(RequestError::NotFound) => return NOT_FOUND_HTML.to_owned(),
+            Err(RequestError::Forbidden) => return "Forbidden".to_owned(),
+            Ok(f) => f,
+        };
+        println!("file: {:?}", file);
+        let mut content = String::new();
+        file.read_to_string(&mut content)
+            .expect("could not read from file");
+        println!("file content: \n{}", content);
+        content
+    }
+
+    fn file(&self, root: &str) -> Result<File, RequestError> {
         let path = self.file_path(root);
-        if !path.exists() {
-            Err("not found")
-        } else if !path.is_file() {
-            Err("location should be a path for file which exists.")
+        if !path.exists() || !path.is_file() {
+            Err(RequestError::NotFound)
         } else {
-            Ok(File::open(path).expect("could not open file"))
+            match File::open(path) {
+                Ok(f) => Ok(f),
+                Err(_) => Err(RequestError::Forbidden),
+            }
         }
     }
 
