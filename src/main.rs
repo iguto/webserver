@@ -63,6 +63,9 @@ fn handle_client(mut stream: TcpStream) {
     file.read_to_string(&mut content)
         .expect("could not read from file");
     println!("file content: \n{}", content);
+
+    stream.write(content.as_bytes())
+        .expect("could not write to stream");
 }
 
 // represents HTTP request line.
