@@ -49,16 +49,20 @@ fn handle_client(mut stream: TcpStream) {
     let location = doc_root.join(subpath);
 
     println!("real location: {:?}", location);
+    if !location.exists() {
+        println!("not found");
+        return;
+    }
     if !location.is_file() {
         println!("location should be a path for file which exists.");
-    } else {
-        let mut file = File::open(location).expect("could not open file");
-        println!("file: {:?}", file);
-        let mut content = String::new();
-        file.read_to_string(&mut content)
-            .expect("could not read from file");
-        println!("file content: \n{}", content);
+        return;
     }
+    let mut file = File::open(location).expect("could not open file");
+    println!("file: {:?}", file);
+    let mut content = String::new();
+    file.read_to_string(&mut content)
+        .expect("could not read from file");
+    println!("file content: \n{}", content);
 }
 
 // represents HTTP request line.
