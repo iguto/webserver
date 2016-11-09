@@ -2,7 +2,6 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 
-
 const NOT_FOUND_HTML: &'static str = r#"
 <html>
 <head>
@@ -100,5 +99,20 @@ impl RequestHandler {
         };
         let doc_root = Path::new(&root).to_owned();
         doc_root.join(path).to_owned()
+    }
+}
+
+#[derive(Debug)]
+pub struct ResponseHeader {
+    pub content_type: String,
+    pub body: String,
+}
+
+impl ResponseHeader {
+    fn new(body: &str) -> ResponseHeader {
+        ResponseHeader {
+            content_type: "text/html".to_owned(),
+            body: "<html><body><h1>header</h1></body></html>".to_owned(),
+        }
     }
 }
