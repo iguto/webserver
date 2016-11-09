@@ -50,7 +50,7 @@ impl RequestLine {
         if target.starts_with("GET") {
             return Some(Method::GET);
         }
-        return None;
+        return None
     }
 }
 
