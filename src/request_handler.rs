@@ -19,9 +19,9 @@ pub enum Method {
 
 #[derive(Debug)]
 pub enum HTTPVersion {
-    POINT_NINE,     // 0.9
-    ONE,            // 1.0
-    ONE_POINT_ONE,  // 1.1
+    PointNine,    // 0.9
+    ONE,          // 1.0
+    OnePointOne,  // 1.1
 }
 
 enum RequestError {
@@ -67,8 +67,8 @@ impl RequestLine {
     fn detect_version(string: &str) -> HTTPVersion {
         match (string.starts_with("HTTP/"), string.split("/").nth(1).unwrap()) {
             (true, "1.0") => HTTPVersion::ONE,
-            (true, "1.1") => HTTPVersion::ONE_POINT_ONE,
-            _ => HTTPVersion::POINT_NINE,
+            (true, "1.1") => HTTPVersion::OnePointOne,
+            _ => HTTPVersion::PointNine,
         }
     }
 }
