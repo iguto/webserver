@@ -89,11 +89,24 @@ impl RequestHandler {
             Ok(f) => f,
         };
         println!("file: {:?}", file);
-        let mut content = String::new();
-        file.read_to_string(&mut content)
-            .expect("could not read from file");
-        println!("file content: \n{}", content);
-        content
+        match self.request_line.version {
+            HTTPVersion::PointNine => {
+                let mut content = String::new();
+                file.read_to_string(&mut content)
+                    .expect("could not read from file");
+                println!("file content: \n{}", content);
+                content
+            },
+            _ => {
+                let header = "Content-Type: text/html;\n\n";
+
+                let mut content = String::new();
+                file.read_to_string(&mut content)
+                    .expect("could not read from file");
+                println!("file content: \n{}", content);
+                format!("{}{}", header, content)
+            }
+        }
     }
 
     fn file(&self, root: &str) -> Result<File, RequestError> {
