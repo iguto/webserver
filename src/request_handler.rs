@@ -53,7 +53,7 @@ impl RequestLine {
 
         let method = RequestLine::detect_method(&words[0]).expect("invalid HTTP method");
         let location = words[1].trim();
-        let version = RequestLine::detect_version(&words[2]);
+        let version = RequestLine::detect_version(&words[2].trim());
         (method, location.to_owned(), version)
     }
 
@@ -89,23 +89,21 @@ impl RequestHandler {
             Ok(f) => f,
         };
         println!("file: {:?}", file);
+        let mut content = String::new();
+        file.read_to_string(&mut content)
+            .expect("could not read from file");
         match self.request_line.version {
             HTTPVersion::PointNine => {
-                let mut content = String::new();
-                file.read_to_string(&mut content)
-                    .expect("could not read from file");
                 println!("file content: \n{}", content);
                 content
             },
             _ => {
-                let header = "Content-Type: text/html;\n\n";
-
-                let mut content = String::new();
-                file.read_to_string(&mut content)
-                    .expect("could not read from file");
-                println!("file content: \n{}", content);
-                format!("{}{}", header, content)
-            }
+//                let header = "Content-Type: text/html;\n\n";
+                let header = ResponseHeader::new(content);
+//                println!("file content: \n{}", content);
+//                format!("{}{}", header.render(), content)
+                header.render()
+            },
         }
     }
 
@@ -141,10 +139,14 @@ pub struct ResponseHeader {
 }
 
 impl ResponseHeader {
-    fn new(body: &str) -> ResponseHeader {
+    fn new(body: String) -> ResponseHeader {
         ResponseHeader {
             content_type: "text/html".to_owned(),
-            body: "<html><body><h1>header</h1></body></html>".to_owned(),
+            body: body,
         }
+    }
+
+    fn render(&self) -> String {
+        format!("HTTP/{:.1} {} OK\r\nContent-Type: text/html;\r\n\r\n{}", 1.0, 200, self.body)
     }
 }
