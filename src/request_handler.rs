@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
+use std::fmt;
 
 const NOT_FOUND_HTML: &'static str = r#"
 <html>
@@ -22,6 +23,16 @@ pub enum HTTPVersion {
     PointNine,    // 0.9
     ONE,          // 1.0
     OnePointOne,  // 1.1
+}
+
+impl fmt::Display for HTTPVersion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            HTTPVersion::PointNine =>  write!(f, "0.9"),
+            HTTPVersion::ONE => write!(f, "1.0"),
+            HTTPVersion::OnePointOne => write!(f, "1.1"),
+        }
+    }
 }
 
 enum RequestError {
@@ -93,16 +104,10 @@ impl RequestHandler {
         file.read_to_string(&mut content)
             .expect("could not read from file");
         match self.request_line.version {
-            HTTPVersion::PointNine => {
-                println!("file content: \n{}", content);
-                content
-            },
+            HTTPVersion::PointNine => content,
             _ => {
-//                let header = "Content-Type: text/html;\n\n";
                 let header = ResponseHeader::new(content);
-//                println!("file content: \n{}", content);
-//                format!("{}{}", header.render(), content)
-                header.render()
+                header.render(&self.request_line)
             },
         }
     }
@@ -146,7 +151,7 @@ impl ResponseHeader {
         }
     }
 
-    fn render(&self) -> String {
-        format!("HTTP/{:.1} {} OK\r\nContent-Type: text/html;\r\n\r\n{}", 1.0, 200, self.body)
+    fn render(&self, request_line: &RequestLine) -> String {
+        format!("HTTP/{} {} OK\r\nContent-Type: text/html;\r\n\r\n{}", request_line.version, 200, self.body) // todo: [].join的な形にしたい
     }
 }
