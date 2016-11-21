@@ -16,12 +16,8 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(stream) => {
-                thread::spawn(move || handle_client(stream));
-            }
-            Err(e) => {
-                println!("connection failed: {}", e);
-            }
+            Ok(stream) => { thread::spawn(move || handle_client(stream)); },
+            Err(e) => { println!("connection failed: {}", e); },
         }
     }
     drop(listener);
@@ -44,7 +40,7 @@ fn handle_client(mut stream: TcpStream) {
                     Some(index) => {
                         s.push_str(str::from_utf8(&buf[0..index]).expect("invalid data as utf8"));
                         break;
-                    }
+                    },
                     None => s.push_str(str::from_utf8(&buf[0..n]).expect("invalid data as utf8")),
                 }
             }
