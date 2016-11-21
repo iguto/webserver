@@ -48,9 +48,7 @@ fn handle_client(mut stream: TcpStream) {
         }
     }
     println!("{:?} : {}", stream, s);
-    let request_line = request_handler::RequestLine::new(&s);
-    println!("request line: {:?}", request_line);
-    let request_handler = request_handler::RequestHandler::new(request_line);
+    let request_handler = request_handler::RequestHandler::new(&s);
 
     let content = request_handler.response(DOCUMENT_ROOT);
     stream.write(content.as_bytes())

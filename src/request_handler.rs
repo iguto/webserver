@@ -89,8 +89,9 @@ pub struct RequestHandler {
 }
 
 impl RequestHandler {
-    pub fn new(request_line: RequestLine) -> RequestHandler {
-        RequestHandler { request_line: request_line }
+//    pub fn new(request_line: RequestLine) -> RequestHandler {
+    pub fn new(raw_request_line: &str) -> RequestHandler {
+        RequestHandler { request_line: RequestLine::new(raw_request_line) }
     }
 
     pub fn response(&self, root: &str) -> String {
