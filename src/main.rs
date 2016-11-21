@@ -3,7 +3,7 @@ use std::thread;
 use std::io::{Read, Write};
 use std::str;
 
-pub mod request_handler;
+mod request_handler;
 
 const DOCUMENT_ROOT: &'static str = "/Users/iguto/tmp/webserver_document"; // TODO: can be relative path
 
