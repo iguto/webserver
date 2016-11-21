@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 
 use super::request_line::*;
+use super::response_header::*;
 
 const NOT_FOUND_HTML: &'static str = r#"
 <html>
@@ -69,24 +70,5 @@ impl RequestHandler {
         };
         let doc_root = Path::new(&root).to_owned();
         doc_root.join(path).to_owned()
-    }
-}
-
-#[derive(Debug)]
-pub struct ResponseHeader {
-    pub content_type: String,
-    pub body: String,
-}
-
-impl ResponseHeader {
-    fn new(body: String) -> ResponseHeader {
-        ResponseHeader {
-            content_type: "text/html".to_owned(),
-            body: body,
-        }
-    }
-
-    fn render(&self, request_line: &RequestLine) -> String {
-        format!("HTTP/{} {} OK\r\nContent-Type: text/html;\r\n\r\n{}", request_line.version, 200, self.body) // todo: [].join的な形にしたい
     }
 }
